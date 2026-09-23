@@ -1,11 +1,6 @@
 "use client";
-// Bug B2: este componente faz fetch de /api/acoes/[ticker] com useEffect para "manter
-// o preço atualizado", mas o dado já chega via props (acao.preco).
-// O fetch é redundante, processa dados no cliente que já estavam disponíveis no servidor,
-// e causa um flash de "Carregando preço..." desnecessário a cada render.
-// Fix: remover o useEffect e o estado precoAtual, usar acao.preco diretamente.
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Acao } from "@/types/acao";
 
 interface Props { acao: Acao; }
@@ -13,23 +8,6 @@ interface Props { acao: Acao; }
 export default function BoletaForm({ acao }: Props) {
   const [quantidade, setQuantidade] = useState(""); // Bug B14: string, não number
   const [enviado, setEnviado] = useState(false);
-
-  // Bug B2: fetch desnecessário — acao.preco já chegou via props do Server Component
-  // Isso força um round-trip ao servidor para dado que já estava disponível
-  const [precoAtual, setPrecoAtual] = useState<number | undefined>(acao.preco);
-  useEffect(() => {
-    // "atualizando o preço em tempo real" — mas acao.preco já estava correto nas props
-    fetch(`/api/acoes/${acao.ticker}`)
-      .then(r => r.json())
-      .then(data => {
-        // Bug B13 composto: tenta ler regularMarketPrice (campo do brapi) mas o mock
-        // retorna preco — quando brapi está offline, precoAtual fica undefined
-        setPrecoAtual(data.regularMarketPrice ?? data.preco);
-      })
-      .catch(() => {
-        // silencia — precoAtual permanece com o valor inicial das props
-      });
-  }, [acao.ticker]);
 
   // Bug B13: acao.preco é undefined quando a API retorna dados brapi raw (usa regularMarketPrice)
   // Bug B14: quantidade (string) * precoAtual (number) = NaN → || 0 esconde o bug
