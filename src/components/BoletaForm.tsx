@@ -6,25 +6,35 @@ import type { Acao } from "@/types/acao";
 interface Props { acao: Acao; }
 
 export default function BoletaForm({ acao }: Props) {
-  const [quantidade, setQuantidade] = useState(""); // Bug B14: string, não number
+  const [quantidade, setQuantidade] = useState("");
   const [enviado, setEnviado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
-  // Bug B13: acao.preco é undefined quando a API retorna dados brapi raw (usa regularMarketPrice)
-  // Bug B14: quantidade (string) * precoAtual (number) = NaN → || 0 esconde o bug
-  const total = (quantidade as any) * (precoAtual ?? acao.preco) || 0;
+
+  const precoAtual = acao.preco;
+  const quantidadeNumerica = Number(quantidade);
+  const total = Number.isFinite(quantidadeNumerica) && quantidadeNumerica > 0
+    ? quantidadeNumerica * precoAtual
+    : 0;
 
   async function handleCompra() {
-    await fetch("/api/ordens", {
+    setErro(null);
+    const res = await fetch("/api/ordens", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ticker: acao.ticker,
-        quantidade: Number(quantidade),
-        preco: precoAtual ?? acao.preco,  // Bug B13: pode ser undefined quando brapi está online
+        quantidade: quantidadeNumerica,
+        preco: precoAtual,
         total,
         tipo: "compra",
       }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setErro(data.error ?? "Não foi possível registrar a ordem.")
+      return
+    }
     setEnviado(true);
   }
 
@@ -44,9 +54,8 @@ export default function BoletaForm({ acao }: Props) {
         </div>
         <div>
           <label style={{ fontSize: "0.75rem", color: "#888" }}>Preço atual</label>
-          {/* Bug B13: quando brapi está online, precoAtual pode ser undefined → exibe "R$ undefined" */}
           <div style={{ fontSize: "1.1rem" }}>
-            {precoAtual === undefined ? "Carregando preço..." : `R$ ${precoAtual}`}
+            R$ {precoAtual.toFixed(2)}
           </div>
         </div>
         <div>
@@ -62,9 +71,11 @@ export default function BoletaForm({ acao }: Props) {
         </div>
         <div>
           <label style={{ fontSize: "0.75rem", color: "#888" }}>Total estimado</label>
-          {/* Bug B14: sempre mostra R$ 0 por causa do || 0 */}
           <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#f59e0b" }}>R$ {total.toFixed(2)}</div>
         </div>
+        {erro && (
+          <div style={{color: "#ef4444", fontSize: "0.8rem"}}>{erro}</div>
+        )}
         <button
           onClick={handleCompra}
           style={{ background: "#22c55e", color: "#000", border: "none", padding: "0.75rem", borderRadius: 4, fontWeight: 700, cursor: "pointer", fontSize: "0.9rem" }}
