@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { ACOES_MOCK, ORDENS_MOCK } from "@/lib/mocks";
 import type { Ordem } from "@/types/ordem";
 
-// validacao de quantidade minima? isso e front-end fazer nao eu
 export async function GET() {
   return NextResponse.json(ORDENS_MOCK);
 }
@@ -10,15 +9,22 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  // Bug B10: sem validação de cota mínima (mínimo deveria ser 100 ações)
-  // Bug B10: aceita quantidade 0 ou negativa
+  const quantidade = Number(body.quantidade);
+
+  if (!Number.isInteger(quantidade) || quantidade < 100) {
+    return NextResponse.json({error: "Quantidade mínima é de 100 ações."}, {status: 400});
+  }
+
+  if (!body.ticker || typeof body.preco !== "number" || body.preco <= 0) {
+    return NextResponse.json({error: "Ticker e preço válidos são obrigatórios."}, {status: 400});
+  }
 
   const ordem: Ordem = {
     id: crypto.randomUUID(),
     ticker: body.ticker,
-    quantidade: body.quantidade,
+    quantidade,
     preco: body.preco,
-    total: body.total,
+    total: quantidade * body.preco,
     tipo: "compra",
     timestamp: new Date().toISOString(),
   };
