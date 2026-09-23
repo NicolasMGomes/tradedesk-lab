@@ -1,6 +1,3 @@
-// funcionou na minha maquina, params.ticker ta chegando certo
-// Bug B4: params acessado sem await — Next.js 15 exige await params
-
 import Link from "next/link";
 import GraficoAcao from "@/components/GraficoAcao";
 
@@ -9,7 +6,7 @@ interface Props {
 }
 
 export default async function AcaoPage({ params }: Props) {
-  const { ticker } = params as any; // Bug B4: falta await params — deveria ser: const { ticker } = await params;
+  const { ticker } = await params;
 
   const res = await fetch(`http://localhost:3000/api/acoes/${ticker}`, { cache: "no-store" });
   const acao = await res.json();
