@@ -1,13 +1,11 @@
 // Server Component — busca status do mercado em URL externa
-// BUG CACHE (Surpresa): sem opção de cache → Next.js cacheia como estático
-// Fix: adicionar { cache: "no-store" } ou { next: { revalidate: 30 } }
 
 export default async function MercadoStatus() {
   let status = { status: "alta", mensagem: "Mercado operando normalmente", crash: false };
 
   try {
     const url = process.env.NEXT_PUBLIC_MERCADO_STATUS_URL ?? "https://web-on-fire.vercel.app/api/status-mercado";
-    const res = await fetch(url); // BUG: sem cache: "no-store"
+    const res = await fetch(url, {cache: "no-store"});
     status = await res.json();
   } catch {
     // silencia erro de rede
