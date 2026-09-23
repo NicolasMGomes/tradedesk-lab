@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ACOES_MOCK } from "@/lib/mocks";
+import { normalizeAcao } from "@/lib/brapi";
 
 export async function GET(
   _req: Request,
@@ -14,16 +15,14 @@ export async function GET(
     if (!res.ok) throw new Error("brapi offline");
     const data = await res.json();
 
-    // Bug B9: quando ticker não existe na brapi, results é array vazio
-    // mas retornamos {} com status 200 em vez de 404
     if (!data.results || data.results.length === 0) {
-      return NextResponse.json({}); // Bug B9: deveria ser status 404
+      return NextResponse.json({ error: `Ticker "${ticker}" não encontrado.` }, { status: 404 });
     }
-    return NextResponse.json(data.results[0]); // retorna raw brapi
+    return NextResponse.json(normalizeAcao(data.results[0]));
   } catch {
     const acao = ACOES_MOCK.find(a => a.ticker === ticker.toUpperCase());
     if (!acao) {
-      return NextResponse.json({}); // Bug B9: deveria ser NextResponse.json({ error: "..." }, { status: 404 })
+      return NextResponse.json({ error: `Ticker "${ticker}" não encontrado.` }, { status: 404 });
     }
     return NextResponse.json(acao);
   }
