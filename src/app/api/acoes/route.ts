@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ACOES_MOCK } from "@/lib/mocks";
+import { normalizeAcao } from "@/lib/brapi";
 
 const TICKERS = "PETR4,VALE3,ITUB4,MGLU3,BBDC4";
 
@@ -17,24 +18,10 @@ export async function GET() {
     });
     if (!res.ok) throw new Error("brapi offline");
     const data = await res.json();
-    return NextResponse.json(data.results); // retorna brapi raw
+    return NextResponse.json((data.results ?? []).map(normalizeAcao));
   } catch {
     // brapi indisponivel ou token nao configurado — retornando dados mock
-    return NextResponse.json({
-      _aviso: "brapi.dev indisponivel - exibindo dados mock estaticos",
-      _instrucoes: {
-        api: "https://brapi.dev",
-        como_configurar: [
-          "1. Crie conta gratuita em https://brapi.dev/account",
-          "2. Copie seu token de API",
-          "3. Crie o arquivo .env.local na raiz do projeto",
-          "4. Adicione a linha: BRAPI_TOKEN=seu_token_aqui",
-          "5. Atualize o fetch neste arquivo para incluir ?token=${process.env.BRAPI_TOKEN}",
-        ],
-        url_com_token: `https://brapi.dev/api/quote/${TICKERS}?token=SEU_TOKEN&fundamental=false`,
-        campos_retornados_pela_brapi: ["symbol", "shortName", "regularMarketPrice", "regularMarketChangePercent", "regularMarketVolume"],
-      },
-      acoes: ACOES_MOCK,
-    });
+    console.info("[/api/acoes] brapi.dev indisponível - exibindo dados mock.")
+    return NextResponse.json(ACOES_MOCK);
   }
 }
