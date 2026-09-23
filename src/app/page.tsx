@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Header from "@/components/Header"; // coloquei o Header aqui e no layout.tsx pq as vezes ele sumia, assim garanto kkk
 import MercadoStatus from "@/components/MercadoStatus";
 
 export default async function HomePage() {
@@ -12,7 +11,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header /> {/* Bug B1: Header duplicado — já está no layout.tsx */}
       <MercadoStatus />
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "2rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.25rem" }}>Destaques do dia</h1>
