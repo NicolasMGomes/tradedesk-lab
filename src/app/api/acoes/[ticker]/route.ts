@@ -9,7 +9,7 @@ export async function GET(
   const { ticker } = await params;
 
   try {
-    const res = await fetch(`https://brapi.dev/api/quote/${ticker}?fundamental=false`, {
+    const res = await fetch(`https://brapi.dev/api/quote/${ticker}?token=${process.env.BRAPI_TOKEN}&fundamental=false`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) throw new Error("brapi offline");
