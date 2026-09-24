@@ -13,7 +13,7 @@ const TICKERS = "PETR4,VALE3,ITUB4,MGLU3,BBDC4";
 
 export async function GET() {
   try {
-    const res = await fetch(`https://brapi.dev/api/quote/${TICKERS}?fundamental=false`, {
+    const res = await fetch(`https://brapi.dev/api/quote/${TICKERS}?token=${process.env.BRAPI_TOKEN}&fundamental=false`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) throw new Error("brapi offline");
